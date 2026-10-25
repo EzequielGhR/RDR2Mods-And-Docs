@@ -46,11 +46,13 @@ namespace Smoke {
             Ped playerPed = Game.Player.Character;
 
             if (playerPed == null || !playerPed.IsIdle) return false;
-            if (!ComboPressed(true)) return false;
+            if (!ComboPressed()) return false;
 
             // Fallback to forcing the call, the player might have bought more cigs
             if (cigItemManager.GetItemCount() <= 0 && cigItemManager.GetItemCount(force: true) <= 0) {
                 Screen.PrintSubtitle("You don't have any cigarettes on you!");
+
+                // Force the speech, otherwise Arthur might only say it once and then wait for internal cooldowns
                 playerPed.PlaySpeech("GENERIC_CURSE_MED", "ARTHUR", eSpeechParams.Force);
                 return false;
             }
@@ -97,7 +99,7 @@ namespace Smoke {
             return (
                 playerPed == null
                 || !playerPed.IsAlive
-                || playerPed.IsIdle && ComboPressed(true)
+                || playerPed.IsIdle && ComboPressed()
             );
         }
 
@@ -207,14 +209,6 @@ namespace Smoke {
             }
 
             return false;
-        }
-
-        private bool ComboPressed(bool debug = false) {
-            bool val = ComboPressed();
-            if (debug && val) {
-                Console.Out.WriteLine("Combo Pressed");
-            }
-            return val;
         }
 
         private bool IsPlayerKo() {

@@ -63,7 +63,9 @@ namespace PropManager {
 
             logger.Log("Starting PTFX with name: {0}", ptfxName);
 
+            // You need to let the game know you are going to use the loaded dict
             GRAPHICS.USE_PARTICLE_FX_ASSET(ptfxDict);
+            
             ptfx = GRAPHICS.START_PARTICLE_FX_LOOPED_ON_ENTITY(
                 ptfxName,
                 prop.Handle,
