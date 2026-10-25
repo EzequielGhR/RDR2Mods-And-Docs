@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- This targets the specific .NET Framework version for GTA IV -->
+    <TargetFramework>net48</TargetFramework>
+    
+    <!-- This ensures the output goes to a standard bin folder -->
+    <OutputPath>bin\Debug\</OutputPath>
+    
+    <!-- The name of your final .dll file -->
+    <AssemblyName>Smoke</AssemblyName>
+    
+    <!-- Optimization for GTA IV modding -->
+    <GenerateRuntimeConfigurationFiles>false</GenerateRuntimeConfigurationFiles>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Reference to the ScriptHookDotNet DLL -->
+    <Reference Include="ScriptHookRDRNetAPI">
+      <HintPath>..\lib\ScriptHookRDRNetAPI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <ProjectReference Include="..\utils\AnimationManager\AnimationManager.csproj" />
+    <ProjectReference Include="..\utils\FileLogger\FileLogger.csproj" />
+    <ProjectReference Include="..\utils\ItemManager\ItemManager.csproj" />
+    <ProjectReference Include="..\utils\PropManager\PropManager.csproj" />
+  </ItemGroup>
+</Project>
