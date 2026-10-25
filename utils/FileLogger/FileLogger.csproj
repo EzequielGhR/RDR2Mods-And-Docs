@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- This targets the specific .NET Framework version for GTA IV -->
+    <TargetFramework>net48</TargetFramework>
+    
+    <!-- This ensures the output goes to a standard bin folder -->
+    <OutputPath>bin\Debug\</OutputPath>
+    
+    <!-- The name of your final .dll file -->
+    <AssemblyName>FileLogger</AssemblyName>
+    
+    <!-- Optimization for GTA IV modding -->
+    <GenerateRuntimeConfigurationFiles>false</GenerateRuntimeConfigurationFiles>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- RDR2 SHDN compiler supported, in case you dont want to compile -->
+    <LangVersion>5.0</LangVersion>
+  </PropertyGroup>
+</Project>
