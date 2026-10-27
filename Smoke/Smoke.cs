@@ -97,6 +97,7 @@ namespace Smoke {
             inHand = false;
 
             cigItemManager.RemoveItem();
+            cigItemManager.ApplyItemEffects_Manual(playerPed, Wait);
             Screen.PrintSubtitle(String.Format("Cig equiped. Count: {0}", cigItemManager.GetItemCount()));
         }
 
@@ -217,6 +218,7 @@ namespace Smoke {
             logger.Log("Chin Smoking");
             idleAnimManager.PlayAnim(playerPed, true);
             idleAnimManager.WaitForAnimToFinish(playerPed, Wait, fallbackToAnimTime: true);
+            cigItemManager.ApplyItemEffects_Manual(playerPed, Wait);
         }
 
         private bool ShouldCleanupAnimDicts() {
