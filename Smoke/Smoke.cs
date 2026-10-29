@@ -17,10 +17,12 @@ namespace Smoke {
         private readonly CigaretteBoxManager cigItemManager = ItemManagerFactory.GetPlayerCigaretteBoxManager(LOG_PATH, LOG_NAME);
         private readonly AnimationManager.AnimationManager startAnimManager = AnimationManagerFactory.GetStartSmokeAnimManager(LOG_PATH, LOG_NAME);
         private readonly AnimationManager.AnimationManager endAnimationManager = AnimationManagerFactory.GetEndSmokeAnimManager(LOG_PATH, LOG_NAME);
+        private readonly AnimationManager.AnimationManager idleAnimManager = AnimationManagerFactory.GetIdleSmokeAnimManager(LOG_PATH, LOG_NAME);
         private readonly PropManager.PropManager cigarPropManager = PropManagerFactory.GetCigarettePropManager(LOG_PATH, LOG_NAME);
         private readonly FileLogger.FileLogger logger = new FileLogger.FileLogger(LOG_PATH, LOG_NAME);
         private bool smoking = false;
         private bool inHand = false;
+        private object lastAnimLoad = null;
 
         public Smoke() {
             Interval = 1;
@@ -38,6 +40,12 @@ namespace Smoke {
                 DropCig(true);
             } else if (ShouldSwitchStance()) {
                 SwitchStance();
+            } else if (ShouldChinSmoke()) {
+                ChinSmoke();
+            }
+
+            if (ShouldCleanupAnimDicts()) {
+                CleanupAnimDicts();
             }
         }
 
@@ -66,6 +74,7 @@ namespace Smoke {
 
             if (!cigarPropManager.LoadProp(spawnPos, Wait)) return;
             if (!startAnimManager.LoadAnimDict(Wait)) return;
+            lastAnimLoad = DateTime.Now;
 
             startAnimManager.PlayAnim(playerPed, true);
             cigarPropManager.prop.AttachTo(
@@ -88,6 +97,7 @@ namespace Smoke {
             inHand = false;
 
             cigItemManager.RemoveItem();
+            cigItemManager.ApplyItemEffects_Manual(playerPed, Wait);
             Screen.PrintSubtitle(String.Format("Cig equiped. Count: {0}", cigItemManager.GetItemCount()));
         }
 
@@ -125,6 +135,8 @@ namespace Smoke {
 
             startAnimManager.DiscardAnimDict();
             endAnimationManager.DiscardAnimDict();
+            idleAnimManager.DiscardAnimDict();
+            lastAnimLoad = null;
 
             if (cigarPropManager.prop != null) {
                 logger.Log("Detaching cig");
@@ -152,15 +164,7 @@ namespace Smoke {
 
         private bool ShouldSwitchStance() {
             if (!smoking || !Game.Player.Character.IsIdle) return false;
-
-            int timeout = 0;
-            while (Game.IsControlPressed(eInputType.Jump)) {
-                timeout++;
-                Wait(1);
-                if (timeout > 100) return true;
-            }
-
-            return false;
+            return ComboPressed(eInputType.MeleeAttack);
         }
 
         private void SwitchStance() {
@@ -170,6 +174,7 @@ namespace Smoke {
 
             if (!cigarPropManager.LoadProp(spawnPos, Wait)) return;
             if (!startAnimManager.LoadAnimDict(Wait)) return;
+            lastAnimLoad = DateTime.Now;
 
             // When switching from lip to hand, we extend the wait time for the anim
             int animTime = startAnimManager.animationTime;
@@ -200,12 +205,41 @@ namespace Smoke {
             Screen.PrintSubtitle(String.Format("Cig equiped. Count: {0}", cigItemManager.GetItemCount()));
         }
 
-        private bool ComboPressed() {
+        private bool ShouldChinSmoke() {
+            if (!smoking || !inHand) return false;
+            return ComboPressed(eInputType.Sprint);
+        }
+
+        private void ChinSmoke() {
+            Ped playerPed = Game.Player.Character;
+            if (!idleAnimManager.LoadAnimDict(Wait)) return;
+            lastAnimLoad = DateTime.Now;
+
+            logger.Log("Chin Smoking");
+            idleAnimManager.PlayAnim(playerPed, true);
+            idleAnimManager.WaitForAnimToFinish(playerPed, Wait, fallbackToAnimTime: true);
+            cigItemManager.ApplyItemEffects_Manual(playerPed, Wait);
+        }
+
+        private bool ShouldCleanupAnimDicts() {
+            if (lastAnimLoad == null || lastAnimLoad.GetType() != typeof(DateTime)) return false;
+            return (DateTime.Now - (DateTime)lastAnimLoad).Minutes > 3;
+        }
+
+        private void CleanupAnimDicts() {
+            logger.Log("Last anim load at '{0}'. Cleaning un anim dicts", ((DateTime)lastAnimLoad).ToShortTimeString());
+            startAnimManager.DiscardAnimDict();
+            idleAnimManager.DiscardAnimDict();
+            endAnimationManager.DiscardAnimDict();
+            lastAnimLoad = null;
+        }
+
+        private bool ComboPressed(eInputType input = eInputType.LookBehind, int totalTimeout = 100) {
             int timeout = 0;
-            while (Game.IsControlPressed(eInputType.LookBehind)) {
+            while (Game.IsControlPressed(input)) {
                 timeout++;
                 Wait(1);
-                if (timeout > 100) return true;
+                if (timeout > totalTimeout) return true;
             }
 
             return false;

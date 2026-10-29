@@ -42,7 +42,7 @@ namespace FileLogger {
 
         private void LogByLevel(string level, string format, params object[] objects) {
             string msg = String.Format(format, objects);
-            string logMsg = String.Format("[{0}][{1}:{2}] {3}", level, logName, serviceName ?? "root", msg);
+            string logMsg = String.Format("[{0}][{1}][{2}:{3}] {4}", level, DateTime.Now.ToLongTimeString(), logName, serviceName ?? "root", msg);
 
             lock (_fileLock) {
                 using (StreamWriter writer = new StreamWriter(filePath, append: true, encoding: Encoding.UTF8)) {
