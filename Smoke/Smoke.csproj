@@ -24,5 +24,6 @@
     <ProjectReference Include="..\utils\FileLogger\FileLogger.csproj" />
     <ProjectReference Include="..\utils\ItemManager\ItemManager.csproj" />
     <ProjectReference Include="..\utils\PropManager\PropManager.csproj" />
+    <ProjectReference Include="..\utils\ClothesManager\ClothesManager.csproj" />
   </ItemGroup>
 </Project>

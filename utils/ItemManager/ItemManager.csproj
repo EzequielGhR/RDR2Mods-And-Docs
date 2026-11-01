@@ -15,7 +15,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <!-- RDR2 SHDN compiler supported, in case you dont want to compile -->
-    <LangVersion>5.0</LangVersion>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
