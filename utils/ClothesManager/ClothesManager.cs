@@ -3,6 +3,8 @@ using RDR2.Native;
 using System;
 using System.Runtime.InteropServices;
 
+using FileLogger;
+
 
 namespace ClothesManager {
     [StructLayout(LayoutKind.Sequential, Pack = 8)]
@@ -13,7 +15,7 @@ namespace ClothesManager {
         public int data4;
     }
 
-    public class ClothesManager {
+    public class ClothesHelper {
         public static bool IsPedComponentEquipped(Ped ped, uint componentCategory) {
             return Function.Call<bool>(0xFB4891BD7578CDC1, ped.Handle, componentCategory);
         }
@@ -22,7 +24,7 @@ namespace ClothesManager {
             return IsPedComponentEquipped(ped, Game.Joaat(componentCategoryName));
         }
 
-        public static bool IsPedMasked(Ped ped, FileLogger.FileLogger fileLogger = null) {
+        public static bool IsPedMasked(Ped ped, ModFileLogger fileLogger = null) {
             uint[] maskHashes = {Game.Joaat("MASKS"), Game.Joaat("MASKS_LARGE")};
             foreach(uint hash in maskHashes) {
                 if (IsPedComponentEquipped(ped, hash)) {
@@ -84,7 +86,7 @@ namespace ClothesManager {
             return IsBandanaEquipped(inventoryId);
         }
 
-        public static bool IsPlayerMasked(int inventoryId, FileLogger.FileLogger fileLogger = null) {
+        public static bool IsPlayerMasked(int inventoryId, ModFileLogger fileLogger = null) {
             Ped playerPed = Game.Player.Character;
             try {
                 if (IsBandanaEquipped(inventoryId)) {

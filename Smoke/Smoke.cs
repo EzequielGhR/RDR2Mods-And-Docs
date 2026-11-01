@@ -1,9 +1,7 @@
 using System;
-using System.Runtime.InteropServices;
 using RDR2;
 using RDR2.UI;
 using RDR2.Math;
-using RDR2.Native;
 
 using AnimationManager;
 using FileLogger;
@@ -17,11 +15,11 @@ namespace Smoke {
         private const string LOG_PATH = "scripts/Smoke.log";
         private const string LOG_NAME = "Smoke";
         private readonly CigaretteBoxManager cigItemManager = ItemManagerFactory.GetPlayerCigaretteBoxManager(LOG_PATH, LOG_NAME);
-        private readonly AnimationManager.AnimationManager startAnimManager = AnimationManagerFactory.GetStartSmokeAnimManager(LOG_PATH, LOG_NAME);
-        private readonly AnimationManager.AnimationManager endAnimationManager = AnimationManagerFactory.GetEndSmokeAnimManager(LOG_PATH, LOG_NAME);
-        private readonly AnimationManager.AnimationManager idleAnimManager = AnimationManagerFactory.GetIdleSmokeAnimManager(LOG_PATH, LOG_NAME);
-        private readonly PropManager.PropManager cigarPropManager = PropManagerFactory.GetCigarettePropManager(LOG_PATH, LOG_NAME);
-        private readonly FileLogger.FileLogger logger = new FileLogger.FileLogger(LOG_PATH, LOG_NAME);
+        private readonly AnimManager startAnimManager = AnimationManagerFactory.GetStartSmokeAnimManager(LOG_PATH, LOG_NAME);
+        private readonly AnimManager endAnimationManager = AnimationManagerFactory.GetEndSmokeAnimManager(LOG_PATH, LOG_NAME);
+        private readonly AnimManager idleAnimManager = AnimationManagerFactory.GetIdleSmokeAnimManager(LOG_PATH, LOG_NAME);
+        private readonly ObjPropManager cigarPropManager = PropManagerFactory.GetCigarettePropManager(LOG_PATH, LOG_NAME);
+        private readonly ModFileLogger logger = new ModFileLogger(LOG_PATH, LOG_NAME);
         private bool smoking = false;
         private bool inHand = false;
         private object lastAnimLoad = null;
@@ -60,7 +58,7 @@ namespace Smoke {
                 return false;
             }
 
-            if (ClothesManager.ClothesManager.IsPlayerMasked(cigItemManager.inventoryId, logger)) {
+            if (ClothesHelper.IsPlayerMasked(cigItemManager.inventoryId, logger)) {
                 Screen.PrintSubtitle("You can't smoke while wearing a mask");
                 return false;
             }
@@ -149,20 +147,10 @@ namespace Smoke {
             if (cigarPropManager.prop != null) {
                 logger.Log("Detaching cig");
                 cigarPropManager.prop.Detach();
-                unsafe {
-                    int propHandle = cigarPropManager.prop.Handle;
-                    logger.Warn("[UNSAFE] Marking cigar prop as no longer needed");
-                    ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(&propHandle);
-                }
-                cigarPropManager.prop = null;
+                cigarPropManager.MarkPropAsNoLongerNeeded();
             }
 
-            if (cigarPropManager.model != null) {
-                logger.Log("Mark cigar model as no longer needed");
-                STREAMING.SET_MODEL_AS_NO_LONGER_NEEDED(cigarPropManager.model);
-                cigarPropManager.model = null;
-            }
-
+            cigarPropManager.MarkModelAsNoLongerNeeded();
             cigarPropManager.StopPtfxOnProp();
 
             smoking = false;
@@ -278,7 +266,7 @@ namespace Smoke {
                 return true;
             }
             
-            if (ClothesManager.ClothesManager.IsPlayerMasked(cigItemManager.inventoryId, logger)) {
+            if (ClothesHelper.IsPlayerMasked(cigItemManager.inventoryId, logger)) {
                 logger.Log("Smoking interrupted because mask is on");
                 return true;
             }

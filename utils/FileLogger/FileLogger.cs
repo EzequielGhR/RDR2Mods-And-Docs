@@ -4,7 +4,7 @@ using System.IO;
 using System.Text;
 
 namespace FileLogger {
-    public class FileLogger {
+    public class ModFileLogger {
         // Simple way to define log levels
         private const string INFO = "INFO";
         private const string WARNING = "WARNING";
@@ -16,7 +16,7 @@ namespace FileLogger {
         private static readonly object _fileLock = new object();
         private static readonly ConcurrentDictionary<string, bool> _initialized = new ConcurrentDictionary<string, bool>();
 
-        public FileLogger(string filePath, string logName, string serviceName = null) {
+        public ModFileLogger(string filePath, string logName, string serviceName = null) {
             this.filePath = filePath;
             this.logName = logName;
             this.serviceName = serviceName;

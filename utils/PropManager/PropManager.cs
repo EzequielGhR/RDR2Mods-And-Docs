@@ -6,17 +6,17 @@ using RDR2.Native;
 
 
 namespace PropManager {
-    public class PropManager {
+    public class ObjPropManager {
         private readonly string modelName;
         private readonly string ptfxDict;
         private readonly string ptfxName;
-        private readonly FileLogger.FileLogger logger;
+        private readonly ModFileLogger logger;
         public Model model = null;
         public Prop prop = null;
         public int? ptfx = null;
 
-        public PropManager(string modelName, string ptfxDict, string ptfxName, string logPath, string logName, string serviceName = "PropManager") {
-            logger = new FileLogger.FileLogger(logPath, logName, serviceName);
+        public ObjPropManager(string modelName, string ptfxDict, string ptfxName, string logPath, string logName, string serviceName = "PropManager") {
+            logger = new ModFileLogger(logPath, logName, serviceName);
             this.modelName = modelName;
             this.ptfxDict = ptfxDict;
             this.ptfxName = ptfxName;
@@ -50,7 +50,7 @@ namespace PropManager {
             }
 
             if (prop == null) {
-                logger.Error("Propt cration failed");
+                logger.Error("Prop creation failed");
                 return false;
             }
 
@@ -94,6 +94,23 @@ namespace PropManager {
             }
         }
 
+        public unsafe void MarkPropAsNoLongerNeeded() {
+            if (prop == null) return;
+
+            int propHandle = prop.Handle;
+            logger.Warn("[UNSAFE] Marking prop for  model '{0}' as no longer needed", modelName);
+            ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(&propHandle);
+
+            prop = null;
+        }
+
+        public void MarkModelAsNoLongerNeeded() {
+            logger.Log("Marking model '{0}' as no longer needed", modelName);
+            STREAMING.SET_MODEL_AS_NO_LONGER_NEEDED(model);
+
+            model = null;
+        }
+
         private bool LoadPtfxDict(Action<int> WaitFunc) {
             int timeout = 0;
             bool dictLoaded = STREAMING.HAS_NAMED_PTFX_ASSET_LOADED(Game.Joaat(ptfxDict));
@@ -107,7 +124,7 @@ namespace PropManager {
             }
 
             if (!dictLoaded) {
-                Console.Error.WriteLine("Failed to load ptfx dict in time");
+                logger.Error("Failed to load ptfx dict in time");
                 return false;
             }
 
@@ -116,8 +133,8 @@ namespace PropManager {
     }
 
     public class PropManagerFactory {
-        public static PropManager GetCigarettePropManager(string logPath, string logName, string serviceName = "PropManager:Cigarette") {
-            return new PropManager(
+        public static ObjPropManager GetCigarettePropManager(string logPath, string logName, string serviceName = "PropManager:Cigarette") {
+            return new ObjPropManager(
                 "P_CIGARETTE_DYNAMIC_01X",
                 "core",
                 "ent_amb_cig_smoke",

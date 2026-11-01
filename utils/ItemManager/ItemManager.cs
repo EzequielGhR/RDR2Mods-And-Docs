@@ -1,18 +1,19 @@
 using RDR2;
 using RDR2.Native;
 using System;
-using System.Runtime.InteropServices;
+
+using FileLogger;
 
 namespace ItemManager {
     public abstract class ItemManager {
         private readonly uint item;
         public readonly int inventoryId;
-        protected readonly FileLogger.FileLogger logger;
+        protected readonly ModFileLogger logger;
         private int itemCount = 0;
 
         
         public ItemManager(string itemStringId, Ped ped, string logPath, string logName, string serviceName = "ItemManager") {
-            logger = new FileLogger.FileLogger(logPath, logName, serviceName);
+            logger = new ModFileLogger(logPath, logName, serviceName);
             logger.Log("Initializing with itemStringId: {0}, ped: {1}", itemStringId, ped.Handle);
             item = Game.Joaat(itemStringId);
             inventoryId = INVENTORY._INVENTORY_GET_INVENTORY_ID_FROM_PED(ped.Handle);
