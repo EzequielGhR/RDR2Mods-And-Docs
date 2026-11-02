@@ -21,7 +21,8 @@ cd $SCRIPT_DIR && {
         "../utils/AnimationManager/AnimationManager.cs" \
         "../utils/FileLogger/FileLogger.cs" \
         "../utils/ItemManager/ItemManager.cs" \
-        "../utils/PropManager/PropManager.cs"
+        "../utils/PropManager/PropManager.cs" \
+        "../utils/ClothesManager/ClothesManager.cs"
 } || {
     echo "There was an issue compiling the script"
     cd $CURRENT_DIR

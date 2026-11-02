@@ -17,15 +17,15 @@ namespace AnimationManager {
         }
     }
 
-    public class AnimationManager {
+    public class AnimManager {
         public readonly string dictName;
         public readonly string animName;
         public readonly int animationTime;
         public readonly PropAttachments initialAttach;
         public readonly PropAttachments finalAttach;
-        private readonly FileLogger.FileLogger logger;
+        private readonly ModFileLogger logger;
 
-        public AnimationManager(
+        public AnimManager(
             string dictName,
             string animName,
             int animationTime,
@@ -39,7 +39,7 @@ namespace AnimationManager {
             string logName,
             string serviceName = "AnimationManager"
         ) {
-            logger = new FileLogger.FileLogger(logPath, logName, serviceName);
+            logger = new ModFileLogger(logPath, logName, serviceName);
             this.dictName = dictName;
             this.animName = animName;
             this.animationTime = animationTime;
@@ -141,8 +141,8 @@ namespace AnimationManager {
     }
 
     public class AnimationManagerFactory {
-        public static AnimationManager GetStartSmokeAnimManager(string logPath, string logName, string serviceName = "AnimationManager:StartSmoke") {
-            return new AnimationManager(
+        public static AnimManager GetStartSmokeAnimManager(string logPath, string logName, string serviceName = "AnimationManager:StartSmoke") {
+            return new AnimManager(
                 "amb_rest@world_human_smoking@male_a@stand_enter",
                 "enter_frontright",
                 3000,
@@ -158,8 +158,8 @@ namespace AnimationManager {
             );
         }
 
-        public static AnimationManager GetEndSmokeAnimManager(string logPath, string logName, string serviceName = "AnimationManager:EndSmoke") {
-            return new AnimationManager(
+        public static AnimManager GetEndSmokeAnimManager(string logPath, string logName, string serviceName = "AnimationManager:EndSmoke") {
+            return new AnimManager(
                 "amb_rest@world_human_smoking@male_a@stand_exit",
                 "exit_frontright",
                 500,
@@ -175,8 +175,8 @@ namespace AnimationManager {
             );
         }
 
-        public static AnimationManager GetIdleSmokeAnimManager(string logPath, string logName, string serviceName = "AnimationManager:IdleSmoke") {
-            return new AnimationManager(
+        public static AnimManager GetIdleSmokeAnimManager(string logPath, string logName, string serviceName = "AnimationManager:IdleSmoke") {
+            return new AnimManager(
                 "amb_rest@world_human_smoking@male_a@idle_a",
                 "idle_a",
                 5000,

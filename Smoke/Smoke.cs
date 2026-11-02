@@ -2,12 +2,12 @@ using System;
 using RDR2;
 using RDR2.UI;
 using RDR2.Math;
-using RDR2.Native;
 
 using AnimationManager;
 using FileLogger;
 using ItemManager;
 using PropManager;
+using ClothesManager;
 
 
 namespace Smoke {
@@ -15,11 +15,11 @@ namespace Smoke {
         private const string LOG_PATH = "scripts/Smoke.log";
         private const string LOG_NAME = "Smoke";
         private readonly CigaretteBoxManager cigItemManager = ItemManagerFactory.GetPlayerCigaretteBoxManager(LOG_PATH, LOG_NAME);
-        private readonly AnimationManager.AnimationManager startAnimManager = AnimationManagerFactory.GetStartSmokeAnimManager(LOG_PATH, LOG_NAME);
-        private readonly AnimationManager.AnimationManager endAnimationManager = AnimationManagerFactory.GetEndSmokeAnimManager(LOG_PATH, LOG_NAME);
-        private readonly AnimationManager.AnimationManager idleAnimManager = AnimationManagerFactory.GetIdleSmokeAnimManager(LOG_PATH, LOG_NAME);
-        private readonly PropManager.PropManager cigarPropManager = PropManagerFactory.GetCigarettePropManager(LOG_PATH, LOG_NAME);
-        private readonly FileLogger.FileLogger logger = new FileLogger.FileLogger(LOG_PATH, LOG_NAME);
+        private readonly AnimManager startAnimManager = AnimationManagerFactory.GetStartSmokeAnimManager(LOG_PATH, LOG_NAME);
+        private readonly AnimManager endAnimationManager = AnimationManagerFactory.GetEndSmokeAnimManager(LOG_PATH, LOG_NAME);
+        private readonly AnimManager idleAnimManager = AnimationManagerFactory.GetIdleSmokeAnimManager(LOG_PATH, LOG_NAME);
+        private readonly ObjPropManager cigarPropManager = PropManagerFactory.GetCigarettePropManager(LOG_PATH, LOG_NAME);
+        private readonly ModFileLogger logger = new ModFileLogger(LOG_PATH, LOG_NAME);
         private bool smoking = false;
         private bool inHand = false;
         private object lastAnimLoad = null;
@@ -34,9 +34,7 @@ namespace Smoke {
                 SpawnCig();
             } else if (ShouldDropCig()) {
                 DropCig();
-            } else if (smoking && IsPlayerKo()) {
-                logger.Log("Smoking interrupted");
-                KoSummaryLog();
+            } else if (SmokingInterrupted()) {
                 DropCig(true);
             } else if (ShouldSwitchStance()) {
                 SwitchStance();
@@ -53,8 +51,17 @@ namespace Smoke {
             if (smoking) return false;
             Ped playerPed = Game.Player.Character;
 
-            if (playerPed == null || !playerPed.IsIdle) return false;
             if (!ComboPressed()) return false;
+
+            if (!IsPlayerAvailable()) {
+                Screen.PrintSubtitle("You cannot smoke at this moment");
+                return false;
+            }
+
+            if (ClothesHelper.IsPlayerMasked(cigItemManager.inventoryId, logger)) {
+                Screen.PrintSubtitle("You can't smoke while wearing a mask");
+                return false;
+            }
 
             // Fallback to forcing the call, the player might have bought more cigs
             if (cigItemManager.GetItemCount() <= 0 && cigItemManager.GetItemCount(force: true) <= 0) {
@@ -108,8 +115,7 @@ namespace Smoke {
 
             return (
                 playerPed == null
-                || !playerPed.IsAlive
-                || playerPed.IsIdle && ComboPressed()
+                || IsPlayerAvailable() && ComboPressed()
             );
         }
 
@@ -141,20 +147,10 @@ namespace Smoke {
             if (cigarPropManager.prop != null) {
                 logger.Log("Detaching cig");
                 cigarPropManager.prop.Detach();
-                unsafe {
-                    int propHandle = cigarPropManager.prop.Handle;
-                    logger.Warn("[UNSAFE] Marking cigar prop as no longer needed");
-                    ENTITY.SET_ENTITY_AS_NO_LONGER_NEEDED(&propHandle);
-                }
-                cigarPropManager.prop = null;
+                cigarPropManager.MarkPropAsNoLongerNeeded();
             }
 
-            if (cigarPropManager.model != null) {
-                logger.Log("Mark cigar model as no longer needed");
-                STREAMING.SET_MODEL_AS_NO_LONGER_NEEDED(cigarPropManager.model);
-                cigarPropManager.model = null;
-            }
-
+            cigarPropManager.MarkModelAsNoLongerNeeded();
             cigarPropManager.StopPtfxOnProp();
 
             smoking = false;
@@ -163,8 +159,8 @@ namespace Smoke {
         }
 
         private bool ShouldSwitchStance() {
-            if (!smoking || !Game.Player.Character.IsIdle) return false;
-            return ComboPressed(eInputType.MeleeAttack);
+            if (!smoking || !IsPlayerAvailable()) return false;
+            return ComboPressed(eInputType.Sprint);
         }
 
         private void SwitchStance() {
@@ -206,8 +202,8 @@ namespace Smoke {
         }
 
         private bool ShouldChinSmoke() {
-            if (!smoking || !inHand) return false;
-            return ComboPressed(eInputType.Sprint);
+            if (!smoking || !inHand || !IsPlayerAvailable()) return false;
+            return ComboPressed(eInputType.Jump);
         }
 
         private void ChinSmoke() {
@@ -237,6 +233,8 @@ namespace Smoke {
         private bool ComboPressed(eInputType input = eInputType.LookBehind, int totalTimeout = 100) {
             int timeout = 0;
             while (Game.IsControlPressed(input)) {
+                if (!IsPlayerAvailable()) break;
+
                 timeout++;
                 Wait(1);
                 if (timeout > totalTimeout) return true;
@@ -257,6 +255,30 @@ namespace Smoke {
                 || playerPed.IsFatallyInjured
                 || playerPed.IsIncapacitated
             );
+        }
+
+        private bool SmokingInterrupted() {
+            if (!smoking) return false;
+            
+            if (IsPlayerKo()) {
+                logger.Log("Smoking interrupted because player is in KO state");
+                KoSummaryLog();
+                return true;
+            }
+            
+            if (ClothesHelper.IsPlayerMasked(cigItemManager.inventoryId, logger)) {
+                logger.Log("Smoking interrupted because mask is on");
+                return true;
+            }
+
+            return false;
+        }
+
+
+        private bool IsPlayerAvailable() {
+            Ped playerPed = Game.Player.Character;
+
+            return playerPed.IsIdle && (playerPed.IsOnFoot || playerPed.IsOnHorse) && !IsPlayerKo();
         }
 
         private void KoSummaryLog() {
